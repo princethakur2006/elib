@@ -12,7 +12,10 @@ export default defineConfig([
       
     } ,
     rules: {
-      
+       '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
     }
   },
   tseslint.configs.recommended,
