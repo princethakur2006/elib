@@ -48,7 +48,7 @@ const createUser = async (req: Request, res : Response, next: NextFunction) => {
   try {
     const token = sign({sub: newUser._id}, config.jwtSecret as string, {expiresIn: '7d'})
     //response
-    res.json({
+    res.status(201).json({
     accessToken: token,
   });
   } catch (error) {
@@ -56,5 +56,4 @@ const createUser = async (req: Request, res : Response, next: NextFunction) => {
   }
   
 }
-
 export {createUser};
