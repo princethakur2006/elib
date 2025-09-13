@@ -12,7 +12,7 @@ const bookRouter = express.Router();
 
 const upload = multer({
   dest: path.resolve(__dirname, '../../public/data/uploads'),  //  store temporary file s here and if not exist multer itself create folder
-  limits: {fileSize: 3e7}  //30mb
+  limits: {fileSize: 1e7}  //30mb
 })
 
 
