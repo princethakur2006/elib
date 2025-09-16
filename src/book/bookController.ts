@@ -164,4 +164,55 @@ const listBooks = async(req:Request, res:Response, next:NextFunction) => {
 
 }
 
-export { createBook , updateBook , listBooks };
+const getSingleBook = async(req:Request, res:Response, next:NextFunction) => {
+  const bookId = req.params.bookId;
+  try {
+    const book = await bookModel.findById(bookId);
+    if (!book) {
+      return next(createHttpError(404, "Book not found"));
+    }
+    return res.json(book);
+  } catch (err) {
+    return next(createHttpError(500, "Unable to fetch book"));
+  }
+}
+
+const deleteBook = async(req:Request, res:Response, next:NextFunction) => {
+  const bookId = req.params.bookId;
+
+  const book = await bookModel.findOne({_id: bookId})
+
+  if(!book){
+    return next(createHttpError(404, "book not found"))
+  }
+
+  // check access
+  const _req = req as AuthRequest;
+    if (book.author.toString() !== _req.userId) {
+        return next(createHttpError(403, "You can not update others book."));
+    }
+
+  // now we have to delete the files from the cloudinary 
+  // we have to generate public id from the url 
+  const coverFileSplits = book.coverImage.split('/');
+  const coverImagePublicId = coverFileSplits.at(-2)+'/'+ (coverFileSplits.at(-1)?.split('.').at(-2));
+
+  const bookFileSplits = book.file.split('/');
+  const bookFilePublicId = bookFileSplits.at(-2)+"/"+bookFileSplits.at(-1);
+
+  // add try catch error block 
+  await cloudinary.uploader.destroy(coverImagePublicId)
+
+  await cloudinary.uploader.destroy(bookFilePublicId ,{  // to delete the pdf we have to pass resource type as well 
+    resource_type:"raw"
+  })
+
+  await bookModel.deleteOne({_id: bookId})
+
+
+  return res.status(204).json({id: bookId})  // 204 no content
+  //return res.sendStatus(204);
+
+}
+
+export { createBook , updateBook , listBooks , getSingleBook, deleteBook};
