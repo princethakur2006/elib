@@ -10,7 +10,8 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
   const { title, genre} = req.body;
   
   console.log("files", req.files);
-  const files = req.files as {[fieldname: string]: Express.Multer.File[]};
+  const files = req.files as {[fieldname: string]: Express.Multer.File[]}; // files may be undefined
+  // mimetype : 'application/pdf' 
   
   const coverImageMimeType = files.coverImage?.[0]?.mimetype.split('/').at(-1); //['image','png']
   const filename = files.coverImage?.[0]?.filename;
@@ -21,7 +22,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
     filename_override: filename!,
     folder: 'book-cover',
     format: coverImageMimeType!,
-  });
+    });
 
   const bookFileName = files.file?.[0]?.filename;
 
@@ -43,7 +44,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
   //@ts-ignore
   //console.log('userId', req.userId);
   
-
+//creating (inserting) a new book record into your database.
   const _req = req as AuthRequest
   const newBook = await  bookModel.create({
     title,
@@ -55,8 +56,14 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
 
 
   // Delete temporary files after upload is complete  and wrap it in try catch 
-  await fs.promises.unlink(filepath);
-  await fs.promises.unlink(bookFilePath);
+  try {
+    await fs.promises.unlink(filepath);
+    await fs.promises.unlink(bookFilePath);
+  } catch (error) {
+    console.error("Error deleting temporary files", error);
+    return next(createHttpError(500, "Error deleting temporary files"));
+  }
+
   res.status(201).json({
     id:newBook._id
   });
